@@ -20,18 +20,15 @@ async function getPersonsApi() {
   return response.results;
 }
 
-const getFilmsForPerson = async (person) => {
+const getFilmsForPerson = (person) => {
   let films = [];
+  
   person.films.forEach(async (film) => {
     let data = await fetch(film);
     let response = await data.json();
-    // console.log('response: ',response)
-    const {title, producer} = response
-    // console.log(title,producer)
-    person.pelis.push(`peli: ${title}`)
+    films.push(response.title);
   });
   
-  console.log('pelis: ',person.pelis)
   return films;
 }
 
@@ -47,11 +44,21 @@ function sortPersons(arrPersons){
 
 function showPersonsHTML(arrPersons){
 
-  // console.log(arrPersons[0].pelis)
+  const newPersons = arrPersons.map((person) => {
+    person.films = getFilmsForPerson(person);
+    return person
+  })
+
+  // let arrFimls = [];
+  // newPersons.forEach((person, ) => {
+  //   console.log(person.films)
+  //   arrFimls[index] = person.films;
+  // })
+
   let html = `
     <ul>
-      ${arrPersons.map((person) => 
-        `<li>Name: ${person.name}, Gender: ${person.gender}, Films: ${person.pelis}</li>`)
+      ${newPersons.map((person) => 
+        `<li>Name: ${person.name}, Gender: ${person.gender}, Films: ${JSON.stringify(person.films)}</li>`)
         .join("")}
     </ul>`;
 
@@ -84,19 +91,6 @@ function groupPersonsByGender(persons) {
   let persons = await getPersonsApi();
   groupPersonsByGender(persons);
   objPersons = {male, female, other}
-  let data = [];
-  for (const person of persons) {
-    person.pelis = [];
-    let dataFilms = await getFilmsForPerson(person);
-    data.push(dataFilms)
-    // person.pelis = Array.prototype.concat.apply([], dataFilms);
-    // console.log(dataFilms[0])
-    dataFilms.forEach(film => console.log(film))
-  }
-  let data2 = await Promise.all(data.map(async (film) => {
-    return await film[0];
-  }))
-  // console.log(data2)
-  // console.log(persons)
-  // showPersonsHTML(persons)
+  console.log(objPersons)
+  showPersonsHTML(persons)
 })();
