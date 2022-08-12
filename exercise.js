@@ -1,13 +1,3 @@
-// https://swapi.dev/api/people/
-// 1. Fetch API STAR WARS
-// 2. Obtener las personas
-// 3. Dividir las personas por genero en un objeto.
-// 4. Ordenarlas por orden alfabético
-// 5. Mostar el nombre, genero
-
-// OPTIONAL
-// 7. Obtener el nombre de todas las peliculas donde participa la persona
-
 let male = [];
 let female = [];
 let other = [];
