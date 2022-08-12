@@ -12,85 +12,77 @@ let male = [];
 let female = [];
 let other = [];
 let objPersons = {};
-const body = document.querySelector("body");
+const body = document.querySelector('body');
+
+function groupBy(xs, key) {
+	return xs.reduce(function (rv, x) {
+		(rv[x[key]] = rv[x[key]] || []).push(x);
+		return rv;
+	}, {});
+}
+
+async function fetchAPI(_URL) {
+	let data = await fetch(_URL);
+	return data.json();
+}
 
 async function getPersonsApi() {
-  let data = await fetch("https://swapi.dev/api/people/");
-  let response = await data.json();
-  return response.results;
+	let data = await fetchAPI('https://swapi.dev/api/people/');
+	return data.results;
 }
 
-const getFilmsForPerson = (person) => {
-  let films = [];
-  
-  person.films.forEach(async (film) => {
-    let data = await fetch(film);
-    let response = await data.json();
-    films.push(response.title);
-  });
-  
-  return films;
+const getFilmsForPerson = async (person) => {
+	let films = [];
+
+	const personFilms = person.films;
+	for (const film of personFilms) {
+		let data = await fetch(film);
+		let response = await data.json();
+		films.push(response.title);
+	}
+
+	return films;
+};
+
+function sortPersons(arrPersons) {
+	arrPersons.sort((a, b) => {
+		return a.name > b.name ? 1 : -1;
+	});
 }
 
-function sortPersons(arrPersons){
-  arrPersons.sort((a, b) => {
-    if (a.name > b.name) {
-      return 1;
-    } else {
-      return -1;
-    }
-  });
-} 
+async function showPersonsHTML(arrPersons) {
+	const newPersons = await Promise.all(
+		arrPersons.map(async (person) => {
+			person.films = await getFilmsForPerson(person);
+			return person;
+		})
+	);
 
-function showPersonsHTML(arrPersons){
-
-  const newPersons = arrPersons.map((person) => {
-    person.films = getFilmsForPerson(person);
-    return person
-  })
-
-  // let arrFimls = [];
-  // newPersons.forEach((person, ) => {
-  //   console.log(person.films)
-  //   arrFimls[index] = person.films;
-  // })
-
-  let html = `
+	let html = `
     <ul>
-      ${newPersons.map((person) => 
-        `<li>Name: ${person.name}, Gender: ${person.gender}, Films: ${JSON.stringify(person.films)}</li>`)
-        .join("")}
+      ${newPersons
+				.map(
+					(person) =>
+						`<li>Name: ${person.name}
+						<br/>Gender: ${person.gender}
+						<br/>Films: ${person.films.join(", ")}</li>
+						<br/>`
+				)
+				.join('')}
     </ul>`;
 
-  body.innerHTML = html;
+	body.innerHTML = html;
 }
 
 function groupPersonsByGender(persons) {
-  sortPersons(persons);
-  persons.forEach((person) => {
-    switch (person.gender) {
-      case "male":
-        male.push(person);
-        break;
-
-      case "female":
-        female.push(person);
-        break;
-
-      case "n/a":
-        other.push(person);
-        break;
-
-      default:
-        console.log("hemos encontrado otro");
-    }
-  });
+	sortPersons(persons);
+	return groupBy(persons, 'gender');
 }
 
 (async () => {
-  let persons = await getPersonsApi();
-  groupPersonsByGender(persons);
-  objPersons = {male, female, other}
-  console.log(objPersons)
-  showPersonsHTML(persons)
+	let persons = await getPersonsApi();
+	groupPersonsByGender(persons);
+	objPersons = { male, female, other };
+	console.log(objPersons);
+	showPersonsHTML(persons);
 })();
